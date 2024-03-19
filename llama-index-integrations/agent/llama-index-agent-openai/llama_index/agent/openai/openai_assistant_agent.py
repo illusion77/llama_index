@@ -388,6 +388,14 @@ class OpenAIAssistantAgent(BaseAgent):
         )
         return tool_output_objs
 
+    def _get_usage_token_counts(self, usage: Any) -> dict:
+        """Get the token usage reported by the usage."""
+        return {
+            "prompt_tokens": usage.prompt_tokens or 0,
+            "completion_tokens": usage.completion_tokens or 0,
+            "total_tokens": usage.total_tokens or 0,
+        }
+
     def run_assistant(
         self, instructions_prefix: Optional[str] = None
     ) -> Tuple[Any, Dict]:
@@ -417,6 +425,8 @@ class OpenAIAssistantAgent(BaseAgent):
             raise ValueError(
                 f"Run failed with status {run.status}.\n" f"Error: {run.last_error}"
             )
+        if run.status == "completed" and run.usage:
+            return run, { "sources": sources, "usage": self._get_usage_token_counts(run.usage) }
         return run, {"sources": sources}
 
     async def arun_assistant(
@@ -448,6 +458,8 @@ class OpenAIAssistantAgent(BaseAgent):
             raise ValueError(
                 f"Run failed with status {run.status}.\n" f"Error: {run.last_error}"
             )
+        if run.status == "completed" and run.usage:
+            return run, { "sources": sources, "usage": self._get_usage_token_counts(run.usage) }
         return run, {"sources": sources}
 
     @property
@@ -478,6 +490,7 @@ class OpenAIAssistantAgent(BaseAgent):
         return AgentChatResponse(
             response=str(latest_message.content),
             sources=metadata["sources"],
+            usage=metadata["usage"],
         )
 
     async def _achat(
@@ -497,6 +510,7 @@ class OpenAIAssistantAgent(BaseAgent):
         return AgentChatResponse(
             response=str(latest_message.content),
             sources=metadata["sources"],
+            usage=metadata["usage"],
         )
 
     @trace_method("chat")

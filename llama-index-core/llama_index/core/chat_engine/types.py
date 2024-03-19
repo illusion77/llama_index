@@ -50,6 +50,7 @@ class AgentChatResponse:
     response: str = ""
     sources: List[ToolOutput] = field(default_factory=list)
     source_nodes: List[NodeWithScore] = field(default_factory=list)
+    additional_kwargs: dict = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if self.sources and not self.source_nodes:
